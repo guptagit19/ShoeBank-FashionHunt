@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: nepal-shop-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: nepal_shop
+      MYSQL_USER: nepal_shop_user
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-nepalshop123}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - nepal-shop-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot Backend
+  backend:
+    build: ./backend
+    container_name: nepal-shop-backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/nepal_shop?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: nepal_shop_user
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-nepalshop123}
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      ESEWA_MERCHANT_ID: ${ESEWA_MERCHANT_ID:-EPAYTEST}
+      ESEWA_SECRET_KEY: ${ESEWA_SECRET_KEY:-8gBm/:&EnhH.1/q}
+    ports:
+      - "8080:8080"
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - nepal-shop-network
+
+  # React Frontend with Nginx
+  frontend:
+    build: ./frontend
+    container_name: nepal-shop-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - nepal-shop-network
+
+networks:
+  nepal-shop-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  uploads_data:
