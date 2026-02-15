@@ -1,6 +1,5 @@
 package com.shoebank.nepalshop.model;
 
-import com.shoebank.nepalshop.converter.StringListConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -38,8 +37,9 @@ public class Product {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @Convert(converter = StringListConverter.class)
-    @Column(name = "images", columnDefinition = "TEXT")
+    @ElementCollection
+    @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "image_url")
     private List<String> images;
 
     private String size;
@@ -56,8 +56,9 @@ public class Product {
 
     private String occasion;
 
-    @Convert(converter = StringListConverter.class)
-    @Column(name = "tags", columnDefinition = "TEXT")
+    @ElementCollection
+    @CollectionTable(name = "product_tags", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "tag")
     private List<String> tags;
 
     @Column(name = "is_available")

@@ -33,7 +33,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                      Pageable pageable);
 
        // Unified filter query with all filterable attributes
-       @Query("SELECT p FROM Product p WHERE p.isAvailable = true " +
+       @Query("SELECT DISTINCT p FROM Product p LEFT JOIN p.tags t WHERE p.isAvailable = true " +
                      "AND (:categoryId IS NULL OR p.category.id = :categoryId) " +
                      "AND (:search IS NULL OR :search = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%'))) "
                      +
@@ -42,7 +42,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                      "AND (:brand IS NULL OR LOWER(p.brand) = LOWER(:brand)) " +
                      "AND (:gender IS NULL OR LOWER(p.gender) = LOWER(:gender)) " +
                      "AND (:occasion IS NULL OR LOWER(p.occasion) = LOWER(:occasion)) " +
-                     "AND (:tag IS NULL OR LOWER(p.tags) LIKE LOWER(CONCAT('%', :tag, '%')))")
+                     "AND (:tag IS NULL OR LOWER(t) = LOWER(:tag))")
        Page<Product> findByFilters(@Param("categoryId") Long categoryId,
                      @Param("search") String search,
                      @Param("minPrice") BigDecimal minPrice,
